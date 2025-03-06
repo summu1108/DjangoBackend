@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-c*az1xy2-#1h5%^85(cft*j@!1ly#5y^0+r9-f2u-ct-svpkq_"
+SECRET_KEY = config("SECRET_KEY", default="django-insecure-c*az1xy2-#1h5%^85(cft*j@!1ly#5y^0+r9-f2u-ct-svpkq_")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*").split(",")
 
 
 # Application definition
@@ -40,13 +40,17 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
+    "social_django",
     "api",
-
+    "users",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -67,6 +71,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
@@ -75,9 +81,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "DjangoCore.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# Database Configuration
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -89,7 +93,37 @@ DATABASES = {
     }
 }
 
+# OAuth 2.0 Authentication (Google, Facebook, LinkedIn)
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.facebook.FacebookOAuth2",
+    "social_core.backends.linkedin.LinkedinOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config("GOOGLE_CLIENT_ID")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config("GOOGLE_CLIENT_SECRET")
+
+SOCIAL_AUTH_FACEBOOK_KEY = config("FACEBOOK_CLIENT_ID")
+SOCIAL_AUTH_FACEBOOK_SECRET = config("FACEBOOK_CLIENT_SECRET")
+
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = config("LINKEDIN_CLIENT_ID")
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = config("LINKEDIN_CLIENT_SECRET")
+
+# JWT Configuration
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="http://localhost:3000").split(",")
+
+# Secure User Credentials Encryption Key
+ENCRYPTION_KEY = config("ENCRYPTION_KEY", default="your-256-bit-key")
+
+# Admin User Config
 ADMIN_NAME = config("ADMIN_NAME", default=None)
 ADMIN_EMAIL = config("ADMIN_EMAIL", default=None)
 ADMIN_PHONE = config("ADMIN_PHONE", default=None)
